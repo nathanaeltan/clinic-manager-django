@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +44,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "core",
     "user",
+    "patient",
+    "medication",
 ]
 
 MIDDLEWARE = [
@@ -150,4 +153,9 @@ SWAGGER_SETTINGS = {
             'name': 'Authorization'
         }
     },
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=48),  # Example: Set expiration to 15 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Example: Set expiration to 1 day
 }
