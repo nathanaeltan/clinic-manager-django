@@ -1,11 +1,7 @@
 from rest_framework import serializers
 from core.models import Patient, PatientMedication, Medication
+from medication.serializers import MedicationSerializer
 
-
-class MedicationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Medication
-        fields = ["id", "name"]
 
 
 class PatientMedicationSerializer(serializers.ModelSerializer):
