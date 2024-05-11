@@ -7,7 +7,7 @@ from django.contrib.auth.models import (
 
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.core.exceptions import ValidationError
 
 class UserManager(BaseUserManager):
 
@@ -100,3 +100,41 @@ class PatientMedication(models.Model):
 
     def __str__(self):
         return f"{self.patient} - {self.medication}"
+
+class Procedure(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+class Appointment(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    procedures = models.ManyToManyField(Procedure)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['patient','start_time'], name='unique_appointment_time_per_patient')
+        ]
+
+    def clean(self):
+        # Check if the appointment end time is after the start time
+        if self.start_time >= self.end_time:
+            raise ValidationError("End time must be after start time")
+
+        # Check if there's any overlapping appointment for the same doctor
+        overlapping_appointments = Appointment.objects.filter(
+            patient=self.patient,
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time
+        )
+        if self.pk:
+            overlapping_appointments = overlapping_appointments.exclude(pk=self.pk)  # Exclude self if updating
+        if overlapping_appointments.exists():
+            raise ValidationError("Appointment timing overlaps with existing appointment")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Validate the model
+        super().save(*args, **kwargs)
